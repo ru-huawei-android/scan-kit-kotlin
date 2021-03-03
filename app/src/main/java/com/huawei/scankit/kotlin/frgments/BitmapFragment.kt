@@ -162,12 +162,14 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
 
         Log.i(TAG, value)
 
-        view?.tvBitmapResult?.apply {
-            text = value
-            Linkify.addLinks(this, Linkify.ALL)
-        }
+        requireActivity().runOnUiThread {
+            view?.tvBitmapResult?.apply {
+                text = value
+                Linkify.addLinks(this, Linkify.ALL)
+            }
 
-        view?.bcvBitmapResult?.setBorderRectangles(rectangles)
+            view?.bcvBitmapResult?.setBorderRectangles(rectangles)
+        }
     }
 
     companion object {
