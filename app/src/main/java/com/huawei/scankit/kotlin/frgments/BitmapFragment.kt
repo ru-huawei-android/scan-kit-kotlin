@@ -102,6 +102,8 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
         val length = stream.toByteArray().size
         val bitmap = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, length)
 
+        image.close()
+
         when (view?.rgBitmapFunctions?.checkedRadioButtonId) {
             R.id.rbFunctionBitmap -> scanBitmap(bitmap)
             R.id.rbFunctionMultiProcessor -> scanMultiprocessor(bitmap)
