@@ -99,7 +99,8 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
         when (view?.rgBitmapFunctions?.checkedRadioButtonId) {
             R.id.rbFunctionBitmap -> scanBitmap(bitmap)
             R.id.rbFunctionMultiProcessor -> scanMultiprocessor(bitmap)
-            else -> {}
+            else -> {
+            }
         }
     }
 
@@ -127,6 +128,7 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
         val image = MLFrame.fromBitmap(bitmap)
         val result = barcodeDetector.analyseFrame(image)
 
+        Log.d(TAG, "scanMultiprocessor: ${result != null} ${result.size() > 0}")
         // Process the decoding result when the scanning is successful.
         if (result != null && result.size() > 0) {
             val size = Size(bitmap.width, bitmap.height)
