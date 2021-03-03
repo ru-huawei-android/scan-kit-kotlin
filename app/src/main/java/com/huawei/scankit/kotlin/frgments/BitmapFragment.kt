@@ -71,14 +71,16 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
         Log.i(TAG, "surfaceDestroyed()")
     }
 
-    override fun onStart() {
-        super.onStart()
-        cameraController.startCameraPreview(onImageAvailableListener)
+    override fun onPause() {
+        super.onPause()
+        Log.i(TAG, "onPause()")
+        cameraController.stopCameraPreview()
     }
 
-    override fun onStop() {
-        super.onStop()
-        cameraController.stopCameraPreview()
+    override fun onResume() {
+        super.onResume()
+        Log.i(TAG, "onResume()")
+        cameraController.startCameraPreview(onImageAvailableListener)
     }
 
     private val onImageAvailableListener = OnImageAvailableListener { reader: ImageReader ->
