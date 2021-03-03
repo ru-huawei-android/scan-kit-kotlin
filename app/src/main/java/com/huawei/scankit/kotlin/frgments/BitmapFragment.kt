@@ -85,6 +85,10 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
 
     private val onImageAvailableListener = OnImageAvailableListener { reader: ImageReader ->
         val image = reader.acquireLatestImage()
+        if (image == null) {
+            Log.i(TAG, "image is null, do nothing.")
+            return@OnImageAvailableListener
+        }
         val buffer = image.planes[0].buffer
         val bytes = ByteArray(buffer.capacity())
         buffer[bytes]
