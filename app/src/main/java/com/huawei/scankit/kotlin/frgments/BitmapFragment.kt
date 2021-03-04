@@ -71,18 +71,24 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
         Log.i(TAG, "surfaceDestroyed()")
     }
 
-    override fun onStart() {
-        super.onStart()
-        cameraController.startCameraPreview(onImageAvailableListener)
+    override fun onPause() {
+        super.onPause()
+        Log.i(TAG, "onPause()")
+        cameraController.stopCameraPreview()
     }
 
-    override fun onStop() {
-        super.onStop()
-        cameraController.stopCameraPreview()
+    override fun onResume() {
+        super.onResume()
+        Log.i(TAG, "onResume()")
+        cameraController.startCameraPreview(onImageAvailableListener)
     }
 
     private val onImageAvailableListener = OnImageAvailableListener { reader: ImageReader ->
         val image = reader.acquireLatestImage()
+        if (image == null) {
+            Log.i(TAG, "image is null, do nothing.")
+            return@OnImageAvailableListener
+        }
         val buffer = image.planes[0].buffer
         val bytes = ByteArray(buffer.capacity())
         buffer[bytes]
@@ -96,10 +102,13 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
         val length = stream.toByteArray().size
         val bitmap = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, length)
 
+        image.close()
+
         when (view?.rgBitmapFunctions?.checkedRadioButtonId) {
             R.id.rbFunctionBitmap -> scanBitmap(bitmap)
             R.id.rbFunctionMultiProcessor -> scanMultiprocessor(bitmap)
-            else -> {}
+            else -> {
+            }
         }
     }
 
@@ -127,6 +136,7 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
         val image = MLFrame.fromBitmap(bitmap)
         val result = barcodeDetector.analyseFrame(image)
 
+        Log.d(TAG, "scanMultiprocessor: ${result != null} ${result.size() > 0}")
         // Process the decoding result when the scanning is successful.
         if (result != null && result.size() > 0) {
             val size = Size(bitmap.width, bitmap.height)
@@ -152,12 +162,14 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
 
         Log.i(TAG, value)
 
-        view?.tvBitmapResult?.apply {
-            text = value
-            Linkify.addLinks(this, Linkify.ALL)
-        }
+        requireActivity().runOnUiThread {
+            view?.tvBitmapResult?.apply {
+                text = value
+                Linkify.addLinks(this, Linkify.ALL)
+            }
 
-        view?.bcvBitmapResult?.setBorderRectangles(rectangles)
+            view?.bcvBitmapResult?.setBorderRectangles(rectangles)
+        }
     }
 
     companion object {

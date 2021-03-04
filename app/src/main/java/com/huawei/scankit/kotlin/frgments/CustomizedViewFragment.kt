@@ -66,23 +66,18 @@ class CustomizedViewFragment : Fragment() {
         return view
     }
 
-    override fun onStart() {
-        super.onStart()
-        remoteView.onStart()
-    }
-
     override fun onResume() {
         super.onResume()
+        remoteView.onCreate(null)
+        remoteView.onStart()
         remoteView.onResume()
+        remoteView.resumeContinuouslyScan()
     }
 
     override fun onPause() {
         super.onPause()
         remoteView.onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
+        remoteView.pauseContinuouslyScan()
         remoteView.onStop()
     }
 
