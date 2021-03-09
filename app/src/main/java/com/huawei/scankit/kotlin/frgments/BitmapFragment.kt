@@ -3,9 +3,12 @@ package com.huawei.scankit.kotlin.frgments
 import android.content.Context
 import android.graphics.*
 import android.hardware.camera2.CameraManager
+import android.media.Image
 import android.media.ImageReader
 import android.media.ImageReader.OnImageAvailableListener
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.util.Linkify
 import android.util.Log
 import android.util.Size
@@ -39,16 +42,14 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_bitmap, container, false)
 
-        val surfaceView = view.findViewById<SurfaceView>(R.id.svBitmapResult)
-
         view.rgBitmapFunctions.setOnCheckedChangeListener { _, _ ->
             view.bcvBitmapResult.clear()
             view.tvBitmapResult.text = ""
         }
 
-        surfaceView.holder.addCallback(this)
+        view.svBitmapResult.holder.addCallback(this)
 
-        cameraController = CameraController(cameraManager, surfaceView)
+        cameraController = CameraController(cameraManager, view.svBitmapResult)
 
         view.bcvBitmapResult.post {
             val width: Int = view.bcvBitmapResult.measuredWidth
@@ -71,44 +72,42 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
         Log.i(TAG, "surfaceDestroyed()")
     }
 
-    override fun onPause() {
-        super.onPause()
-        Log.i(TAG, "onPause()")
-        cameraController.stopCameraPreview()
-    }
-
     override fun onResume() {
         super.onResume()
-        Log.i(TAG, "onResume()")
+        Log.i(TAG, "onResume")
         cameraController.startCameraPreview(onImageAvailableListener)
     }
 
+    override fun onPause() {
+        super.onPause()
+        Log.i(TAG, "onPause")
+        cameraController.stopCameraPreview()
+    }
+
     private val onImageAvailableListener = OnImageAvailableListener { reader: ImageReader ->
-        val image = reader.acquireLatestImage()
-        if (image == null) {
-            Log.i(TAG, "image is null, do nothing.")
-            return@OnImageAvailableListener
-        }
-        val buffer = image.planes[0].buffer
-        val bytes = ByteArray(buffer.capacity())
-        buffer[bytes]
+        val image: Image = reader.acquireLatestImage()
+        try {
+            val buffer = image.planes[0].buffer
+            val bytes = ByteArray(buffer.capacity())
+            buffer[bytes]
 
-        val yuv = YuvImage(bytes, ImageFormat.NV21, image.width, image.height, null)
+            val yuv = YuvImage(bytes, ImageFormat.NV21, image.width, image.height, null)
 
-        val stream = ByteArrayOutputStream()
-        val rect = Rect(0, 0, image.width, image.height)
-        yuv.compressToJpeg(rect, 100, stream)
+            val stream = ByteArrayOutputStream()
+            val rect = Rect(0, 0, image.width, image.height)
+            yuv.compressToJpeg(rect, 100, stream)
 
-        val length = stream.toByteArray().size
-        val bitmap = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, length)
+            val length = stream.toByteArray().size
+            val bitmap = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, length)
 
-        image.close()
-
-        when (view?.rgBitmapFunctions?.checkedRadioButtonId) {
-            R.id.rbFunctionBitmap -> scanBitmap(bitmap)
-            R.id.rbFunctionMultiProcessor -> scanMultiprocessor(bitmap)
-            else -> {
+            when (view?.rgBitmapFunctions?.checkedRadioButtonId) {
+                R.id.rbFunctionBitmap -> scanBitmap(bitmap)
+                R.id.rbFunctionMultiProcessor -> scanMultiprocessor(bitmap)
+                else -> {
+                }
             }
+        } finally {
+            image.close()
         }
     }
 
@@ -162,13 +161,19 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
 
         Log.i(TAG, value)
 
-        requireActivity().runOnUiThread {
+        runUIThread {
             view?.tvBitmapResult?.apply {
                 text = value
                 Linkify.addLinks(this, Linkify.ALL)
             }
 
             view?.bcvBitmapResult?.setBorderRectangles(rectangles)
+        }
+    }
+
+    private fun runUIThread(action: () -> Unit) {
+        Handler(Looper.getMainLooper()).post {
+            action.invoke()
         }
     }
 
