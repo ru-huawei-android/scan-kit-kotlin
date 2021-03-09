@@ -82,10 +82,20 @@ class CameraDeviceCallback(
 
     override fun onDisconnected(cameraDevice: CameraDevice) {
         Log.i(TAG, "CameraDevice.StateCallback onDisconnected()")
-        cameraDevice.close()
+        this.cameraDevice = cameraDevice
+        closeCameraDevice()
     }
 
     override fun onError(cameraDevice: CameraDevice, i: Int) {
         Log.i(TAG, "CameraDevice.StateCallback onError()")
+        this.cameraDevice = cameraDevice
+        closeCameraDevice()
+    }
+
+    private fun closeCameraDevice() {
+        if (cameraDevice != null) {
+            cameraDevice!!.close()
+            cameraDevice = null
+        }
     }
 }

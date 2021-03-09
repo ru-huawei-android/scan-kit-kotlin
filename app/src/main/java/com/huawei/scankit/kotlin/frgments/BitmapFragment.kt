@@ -72,11 +72,6 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
         Log.i(TAG, "surfaceDestroyed()")
     }
 
-    override fun onAttachFragment(childFragment: Fragment) {
-        super.onAttachFragment(childFragment)
-        Log.i(TAG, "onAttachFragment()")
-    }
-
     override fun onResume() {
         super.onResume()
         Log.i(TAG, "onResume")
@@ -140,6 +135,7 @@ class BitmapFragment : Fragment(), SurfaceHolder.Callback {
         val image = MLFrame.fromBitmap(bitmap)
         val result = barcodeDetector.analyseFrame(image)
 
+        Log.d(TAG, "scanMultiprocessor: ${result != null} ${result.size() > 0}")
         // Process the decoding result when the scanning is successful.
         if (result != null && result.size() > 0) {
             val size = Size(bitmap.width, bitmap.height)
